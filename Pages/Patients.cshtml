@@ -1,0 +1,273 @@
+﻿@page
+@model ClinicManagementSystem.Pages.PatientsModel
+@using System.Data;
+@using ClinicManagementSystem.Models;
+@{
+}
+<style>
+
+</style>
+
+<div>
+    <h4>Patients</h4>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="CreateNewPatient()" style="float:right;">Create New Patient</button>
+    </div>
+    <div>
+        <div class="modal" id="EditModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Patient</h5>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="IdofPatient" />
+                        <div><strong>Procedure:</strong></div>
+                        <textarea type="text" id="PatientProcedureText" class="form-control input-lg"></textarea>
+                        <div><strong>Notes:</strong></div>
+                        <textarea type="text" id="PatientNotesText" class="form-control input-lg"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="EditModalButton" class="btn btn-primary">Save changes</button>
+                        <button type="button" id="CloseModalButton" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="CreatePatientModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create Patient</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div><strong>Id:</strong>(Use different Id)</div>
+                        <input type="number" id="PatientNumber" class="form-control input-lg" />
+                        <div><strong>Name:</strong></div>
+                        <input type="text" id="PatientName" class="form-control input-lg" />
+                        <div><strong>Phone:</strong></div>
+                        <input type="tel" id="PatientPhone" class="form-control input-lg" />
+                        <div><strong>Address:</strong></div>
+                        <input type="text" id="PatientAddress" class="form-control input-lg" />
+                        <div><strong>Age:</strong></div>
+                        <input type="number" id="PatientAge" class="form-control input-lg" />
+                        <div><strong>Responded Doctor:</strong></div>
+                        <input type="text" id="PatientDoctor" class="form-control input-lg" />
+                        <div><strong>Procedure Name:</strong></div>
+                        <textarea type="text" id="PatientProcedure" class="form-control input-lg"> </textarea>
+                        <div><strong>Notes:</strong></div>
+                        <input type="text" id="PatientNotes" class="form-control input-lg" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="AddModalButton" class="btn btn-primary">Add Patient</button>
+                        <button type="button" id="CloseAddModalButton" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.patientWithMedicalHistories.Count > 0)
+        {
+            <table id="Modeltable" class="table table-hover table-striped arrowes-table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Age</th>
+                        <th>Responded Doctor</th>
+                        <th>Procedure Name</th>
+                        <th>Notes</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (PatientWithMedicalHistory patient in Model.patientWithMedicalHistories!)
+                    {
+                        <tr>
+                            <td>@patient.Id</td>
+                            <td>@patient.Name</td>
+                            <td>@patient.Phone</td>
+                            <td>@patient.Address</td>
+                            <td>@patient.Age</td>
+                            <td>@patient.Responded_Doctor</td>
+                            <td>@patient.procedure_name</td>
+                            <td>@patient.Notes</td>
+                            <td><button id="EditButton" onclick="EditFunction(@patient.Id, '@patient.procedure_name.Trim()','@patient.Notes.Trim()')"><img src="/assets/edit.png" style="height:30px" /></button></td>
+                            <td><button id="DeleteButton" onclick="DeleteFunction(@patient.Id)"><img src="/assets/delete.png" style="height:30px" /></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+
+    </div>
+</div>
+
+
+
+@Html.AntiForgeryToken()
+@section Scripts{
+    <script>
+        function EditFunction(id, procedure,notes) {
+            document.getElementById("IdofPatient").value = id;
+            document.getElementById("PatientProcedureText").value = procedure;
+            document.getElementById("PatientNotesText").value = notes;
+            $('#EditModal').modal('show');
+        }
+
+        
+
+        $("#EditModalButton").on('click', function() {
+            const data = {
+                id: document.getElementById("IdofPatient").value,
+                procedure: document.getElementById("PatientProcedureText").value,
+                notes: document.getElementById("PatientNotesText").value
+            }
+
+            let json = JSON.stringify(data);
+
+            fetch("Patients?handler=EditPatient", {
+                method: 'POST',
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val(),
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: json
+            })
+                .then((response) => {
+                    if (response.status == 500) {
+                        throw new Error('Server failed');
+                    }
+                    if (response.status == 400) {
+                        throw new Error('Log in failed');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    alert("Edit successful");
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    alert("Edit User Failed");
+                    console.error(error);
+                })
+        })
+
+        $("#CloseModalButton").on('click', function() {
+            $('#EditModal').modal('hide');
+        })
+
+
+        $("#CloseAddModalButton").on('click', function() {
+            $('#CreatePatientModal').modal('hide');
+        })
+
+        $("#AddModalButton").on('click', function() {
+            const data = {
+                number: document.getElementById("PatientNumber").value,
+                name: document.getElementById("PatientName").value,
+                phone: document.getElementById("PatientPhone").value,
+                address: document.getElementById("PatientAddress").value,
+                age: document.getElementById("PatientAge").value,
+                doctor: document.getElementById("PatientDoctor").value,
+                procedure: document.getElementById("PatientProcedure").value,
+                notes : document.getElementById("PatientNotes").value
+            }
+
+
+            let json = JSON.stringify(data);
+
+
+            fetch("Patients?handler=AddPatient", {
+                method: 'POST',
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val(),
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: json
+            })
+                .then((response) => {
+                    if (response.status == 500) {
+                        throw new Error('Server failed');
+                    }
+                    if (response.status == 400) {
+                        throw new Error('Log in failed');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    alert("Addition successful");
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    alert("Adding Patient failed");
+                    console.error(error);
+                })
+        })
+
+        $(document).ready(function () {
+            $('#Modeltable').dataTable();
+});
+
+        
+
+
+        function CreateNewPatient() {
+            $("#CreatePatientModal").modal('show');
+        }
+
+
+
+        function DeleteFunction(id) {
+            const data = {
+                id: id
+            }
+
+            let json = JSON.stringify(data);
+
+            if (confirm("Are you sure you want to delete it?")) {
+                fetch("Patients?handler=DeletePatient", {
+                    method: 'POST',
+                    headers: {
+                        RequestVerificationToken:
+                            $('input:hidden[name="__RequestVerificationToken"]').val(),
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                    },
+                    body: json
+                })
+                    .then((response) => {
+                        if (response.status == 500) {
+                            throw new Error('Server failed');
+                        }
+                        if (response.status == 400) {
+                            throw new Error('Log in failed');
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        alert("Delete successful");
+                        window.location.reload();
+                    })
+                    .catch((error) => {
+                        alert("Deleting user failed");
+                        console.error(error);
+                    })
+
+            }
+            else {
+
+            }
+
+        }
+    </script>
+}

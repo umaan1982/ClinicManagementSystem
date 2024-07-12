@@ -1,0 +1,178 @@
+﻿@page
+@model ClinicManagementSystem.Pages.MedicinesModel
+@using System.Data;
+@using ClinicManagementSystem.Models;
+@{
+}
+<style>
+
+</style>
+
+
+
+<div>
+    <h4>Medicines</h4>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="CreateNewMedicine()" style="float:right;">Create New Medicine</button>
+    </div>
+    <div class="modal" id="AddModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Medicine</h5>
+                </div>
+                <div class="modal-body">
+                    <div><strong>Id:</strong>(Use different Id)</div>
+                    <input type="number" id="MedicineId" class="form-control input-lg" />
+                    <div><strong>Name:</strong></div>
+                    <input type="text" id="PatientText" class="form-control input-lg" />
+                    <div><strong>Medicine:</strong></div>
+                    <input type="text" id="MedicineText" class="form-control input-lg" />
+                    <div><strong>Quantity:</strong></div>
+                    <input type="number" id="Quantity" class="form-control input-lg" />
+                    <div><strong>Given At:</strong></div>
+                    <input type="datetime-local" id="GivenAt" class="form-control input-lg" />
+                    <div><strong>Time Duration:</strong></div>
+                    <input type="datetime-local" id="TimeDuration" class="form-control input-lg" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="AddButton" class="btn btn-primary">Save changes</button>
+                    <button type="button" id="CloseButton" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (Model.patientWithMedicines.Count > 0)
+    {
+        <table id="Modeltable" class="table table-hover table-striped arrowes-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Medicine</th>
+                    <th>Quantity</th>
+                    <th>Given At</th>
+                    <th>Time Duration</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PatientWithMedicines patientMedicines in Model.patientWithMedicines!)
+                {
+                    <tr>
+                        <td>@patientMedicines.Id</td>
+                        <td>@patientMedicines.PatientName</td>
+                        <td>@patientMedicines.MedicineName</td>
+                        <td>@patientMedicines.Quantity</td>
+                        <td>@patientMedicines.Date_Given</td>
+                        <td>@patientMedicines.TimePeriod</td>
+                        <td><button id="DeleteButton" onclick="DeleteFunction(@patientMedicines.Id)"><img src="/assets/delete.png" style="height:30px" /></button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+
+
+
+@Html.AntiForgeryToken()
+@section Scripts{
+    <script>
+        $(document).ready(function() {
+            $('#Modeltable').dataTable();
+        });
+        $("#CloseButton").on('click', function() {
+            $("#AddModal").modal('hide');
+        })
+
+        function CreateNewMedicine() {
+            $("#AddModal").modal('show');
+        }
+
+        $("#AddButton").on('click', function() {
+            const data = {
+                id: document.getElementById("MedicineId").value,
+                patientname: document.getElementById("PatientText").value,
+                medicinename: document.getElementById("MedicineText").value,
+                quantity: document.getElementById("Quantity").value,
+                givenat: document.getElementById("GivenAt").value,
+                timeperiod: document.getElementById("TimeDuration").value
+            }
+
+            let json = JSON.stringify(data);
+
+            fetch("Medicines?handler=AddMedicine", {
+                method: 'POST',
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val(),
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: json
+            })
+                .then((response) => {
+                    if (response.status == 500) {
+                        throw new Error('Server failed');
+                    }
+                    if (response.status == 400) {
+                        throw new Error('Log in failed');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    alert("Add successful");
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    alert("Adding Medicine failed");
+                    console.error(error);
+                })
+
+        })
+
+        function DeleteFunction(id) {
+            const data = {
+                id: id
+            }
+
+            let json = JSON.stringify(data);
+
+            if (confirm("Are you sure you want to delete it?")) {
+                fetch("Medicines?handler=DeleteMedicine", {
+                    method: 'POST',
+                    headers: {
+                        RequestVerificationToken:
+                            $('input:hidden[name="__RequestVerificationToken"]').val(),
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                    },
+                    body: json
+                })
+                    .then((response) => {
+                        if (response.status == 500) {
+                            throw new Error('Server failed');
+                        }
+                        if (response.status == 400) {
+                            throw new Error('Log in failed');
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        alert("Delete successful");
+                        window.location.reload();
+                    })
+                    .catch((error) => {
+                        alert("Deleting Medicine failed");
+                        console.error(error);
+                    })
+
+            }
+            else {
+
+            }
+        }
+    </script>
+}

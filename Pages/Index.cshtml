@@ -1,0 +1,115 @@
+﻿@page
+@model IndexModel
+@{
+}
+<style>
+    .welcome h1 {
+        font-weight: 500;
+        font-size: 41px;
+        line-height: 54px;
+        padding-bottom: 17px;
+    }
+
+    .welcome p {
+        font-weight: 400;
+        font-size: 18px;
+        color: #26262699;
+        padding-bottom: 30px;
+        line-height: 24px;
+    }
+
+    .welcome a span {
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        color: #000000;
+        margin-left: 10px;
+        text-decoration: none;
+    }
+
+    .welcome a {
+        border: 1px solid #262626;
+        border-radius: 8px;
+        text-decoration: none;
+        padding: 20px 34px;
+    }
+
+    .welcome-page {
+        padding-top: 9%;
+    }
+
+    .container {
+        max-width: 1200px;
+    }
+</style>
+
+
+
+<div class="container welcome-page">
+    <div class="row">
+        <div class="col-sm-12 col-xs-12 col-md-6">
+            <div class="welcome">
+                <h1>Welcome to Clinic Management System</h1>
+                <p><strong> Please Log In to the System.</strong></p>
+                <div>
+                    <div><strong>Username:</strong></div>
+                    <input type="text" id="Username">
+                    <div><strong>Password:</strong> </div>
+                    <input type="password" id="password" />
+                </div>
+                <button type="button" class="btn btn-primary" id="Loginbtn" onclick="LogInUser()" style="margin-top:10px;">Log In</button>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-xs-12 col-md-6">
+            <div class="image">
+                <img src="~/assets/welcome.jpg" alt="welcomepage" style="width:auto;height:450px;margin-left:-84px;margin-top:-98px;" />
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+@Html.AntiForgeryToken()
+@section Scripts{
+    <script>
+        function LogInUser() {
+            const data = {
+                username : document.getElementById("Username").value,
+                password : document.getElementById("password").value
+            }
+
+            let json = JSON.stringify(data);
+
+            fetch("Index?handler=SignIn", {
+                method: 'POST',
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val(),
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: json
+            })
+            .then((response) => {
+                if (response.status == 500) {
+                    throw new Error('Server failed');
+                }
+                if (response.status == 400) {
+                    throw new Error('Log in failed');
+                }
+                return response.json();
+            })
+                .then((data) => {
+                    alert("Sign in successful");
+                    window.location.replace("/Patients?LogIn=" + data);
+                })
+                .catch((error) => {
+                    alert("Log in failed");
+                    console.error(error);
+                })
+        }
+    </script>
+}
