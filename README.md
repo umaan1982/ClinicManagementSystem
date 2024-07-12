@@ -57,7 +57,3 @@ Select an appointment from the list, click 'Edit', modify the details as needed,
 
 #### Cancel an appointment
 Select an appointment from the list and click 'Cancel'. Confirm the action in the prompt.
-
-## Contact
-
-For any questions or inquiries, please contact [your-email@example.com].
